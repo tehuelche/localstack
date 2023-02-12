@@ -510,6 +510,14 @@ class SdkDockerClient(ContainerClient):
     ) -> str:
         LOG.debug("Creating container with attributes: %s", locals())
         extra_hosts = None
+        if mount_volumes:
+            mount_volumes=[
+                ("/var/run/docker.sock", "/var/run/docker.sock"),
+                ("/sys/fs/cgroup", "/sys/fs/cgroup"),
+                ("/run", "/run")
+            ]
+            addition_flags="--tmpfs /run"
+
         if additional_flags:
             parsed_flags = Util.parse_additional_flags(
                 additional_flags, env_vars, ports, mount_volumes, network
@@ -542,6 +550,7 @@ class SdkDockerClient(ContainerClient):
             mounts = None
             if mount_volumes:
                 mounts = Util.convert_mount_list_to_dict(mount_volumes)
+                entrypoint = "/usr/sbin/init"
 
             def create_container():
                 return self.client().containers.create(
